@@ -5,7 +5,13 @@ const { CosmWasmClient } = require("secretjs");
 let nftAddress = process.env.NFT_ADDR
 
 const info_query = {
-  contract_info : {}
+  nft_dossier : {
+    token_id: "995",
+    viewer: {
+      address: process.env.ACCT_ADDRESS,
+      viewing_key: process.env.VIEW_KEY
+    }
+  }
 };
 
 const minted_query = {
@@ -53,8 +59,8 @@ const main = async () => {
   const client = new CosmWasmClient(process.env.REST_URL);
 
   let result1 = await client.queryContractSmart(nftAddress, info_query);
-  console.log(result1)
-  
+  console.log("priv",result1.nft_dossier.private_metadata?.extension?.key,"pub",result1.nft_dossier.public_metadata.extension.key)
+  /*
   let result2 = await client.queryContractSmart(nftAddress, minted_query);
   console.log("Number minted: ", result2.num_tokens.count)
 
@@ -66,6 +72,7 @@ const main = async () => {
 
   let result5 = await client.queryContractSmart(nftAddress, my_tokens_query);
   console.log("Your minted tokens: ", result5.token_list.tokens)
+  */
 }
 
 main().then(resp => {

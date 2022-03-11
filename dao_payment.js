@@ -1,9 +1,8 @@
 require('dotenv').config();
 const {
-    EnigmaUtils, Secp256k1Pen, SigningCosmWasmClient, pubkeyToAddress, encodeSecp256k1Pubkey, logs, BroadcastMode
+    EnigmaUtils, Secp256k1Pen, SigningCosmWasmClient, pubkeyToAddress, encodeSecp256k1Pubkey, logs
   } = require("secretjs");
 const textEncoding = require('text-encoding');
-const { AsyncClient } = require('./utils/AsyncClient');
 const TextDecoder = textEncoding.TextDecoder;
 //
 const customFees = {
@@ -13,18 +12,13 @@ const customFees = {
     }
 }
 
-const nftAddress = process.env.NFT_ADDR;
+const daoAddress = process.env.DAO_ADDR;
 const tokenAddress = process.env.TOKEN_ADDR;
-
-const mintMsg = {
-    receive_mint: {}
-};    
 
 const sendMsg = {
     send: {
-        amount:"21000000",
-        recipient: nftAddress,
-        msg: Buffer.from(JSON.stringify(mintMsg)).toString('base64')        
+        amount:"1000000",
+        recipient: daoAddress,
     }
 }
 
@@ -35,30 +29,43 @@ const main = async () => {
     const txEncryptionSeed = EnigmaUtils.GenerateNewSeed();
     const enigmaUtils = new EnigmaUtils(process.env.RESTURL, txEncryptionSeed);
 
-    const client = new AsyncClient(
+    const client = new SigningCosmWasmClient(
         process.env.REST_URL,
         accAddress,
         (signBytes) => signingPen.sign(signBytes),
-        txEncryptionSeed, customFees, BroadcastMode.Sync
+        txEncryptionSeed, customFees
     );
 
     console.log(`Wallet address = ${accAddress}`)
 
     response = await client.execute(tokenAddress, sendMsg);
+    response.data = JSON.parse(new TextDecoder().decode(response.data));
     console.log(response);
 
     //get full TX with logs from REST
-    let full = await client.checkTx(response.transactionHash);
-    if (full.code) {throw full.raw_log}
+    let full = await client.restClient.txById(response.transactionHash);
 
     //decode response data to plain text
-    if (full.data.length) full.data = JSON.parse(new TextDecoder().decode(full.data));
+    full.data = JSON.parse(new TextDecoder().decode(full.data));
 
     let logs = {};
     full.logs[0].events[1].attributes.map((obj) => { logs[obj.key.trim()] = obj.value.trim() });
 
-    //get ID of the NFT you minted from TX logs, no query required!
-    console.log("Minted ID: ", logs.minted);
+    console.log(logs);
+
+    console.log(`Recip address = ${process.env.RECIP_ADDR}`)
+
+    const balanceQuery = { 
+        balance: {
+            key: process.env.VIEW_KEY, 
+            address: process.env.RECIP_ADDR
+        }
+    };
+
+    const balance = await client.queryContractSmart(tokenAddress, balanceQuery);
+    console.log(balance)
+    const account = await client.getAccount(process.env.RECIP_ADDR)
+    console.log(account.balance);
 }
 
 main().then(resp => {

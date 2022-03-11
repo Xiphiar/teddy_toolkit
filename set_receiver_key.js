@@ -5,23 +5,17 @@ const {
 const textEncoding = require('text-encoding');
 const TextDecoder = textEncoding.TextDecoder;
 
-const customFees = {
-    exec: {
-        amount: [{ amount: "50000", denom: "uscrt" }],
-        gas: "200000",
-    }
-}
+const tokenAddress = process.env.TOKEN_ADDR;
 
-const sendMsg = {
-    send: {
-        amount:"1000000000",
-        recipient: "secret1p6xc2hgrr6nt50zgx9n49yeacdtesn84xtwcpm",
+const keyMsg = {
+    set_viewing_key: {
+        key: process.env.VIEW_KEY
     }
-}  
+};    
 
 
 const main = async () => {
-    const signingPen = await Secp256k1Pen.fromMnemonic(process.env.MNEMONIC);
+    const signingPen = await Secp256k1Pen.fromMnemonic(process.env.RECIP_MNEMONIC);
     const pubkey = encodeSecp256k1Pubkey(signingPen.pubkey);
     const accAddress = pubkeyToAddress(pubkey, 'secret');
     const txEncryptionSeed = EnigmaUtils.GenerateNewSeed();
@@ -35,9 +29,18 @@ const main = async () => {
 
     console.log(`Wallet address = ${accAddress}`)
 
-    response = await client.execute(process.env.TOKEN_ADDR, sendMsg);
+    response = await client.execute(tokenAddress, keyMsg);
     response.data = JSON.parse(new TextDecoder().decode(response.data));
     console.log(response);
+
+    const balanceQuery = { 
+        balance: {
+            key: process.env.VIEW_KEY, 
+            address: accAddress
+        }
+    };
+    const balance = await client.queryContractSmart(tokenAddress, balanceQuery);
+    console.log(balance)
 }
 
 main().then(resp => {

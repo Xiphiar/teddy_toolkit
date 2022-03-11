@@ -12,10 +12,10 @@ const customFees = {
     }
 }
 
-const sendMsg = {
-    send: {
-        amount:"1000000000",
-        recipient: "secret1p6xc2hgrr6nt50zgx9n49yeacdtesn84xtwcpm",
+const swapMsg = {
+    transfer_nft: {
+        token_id:"995",
+        recipient: "secret14fa9jm9g5mjs35yxarh057lesy4zszw5gavcun"
     }
 }  
 
@@ -35,7 +35,7 @@ const main = async () => {
 
     console.log(`Wallet address = ${accAddress}`)
 
-    response = await client.execute(process.env.TOKEN_ADDR, sendMsg);
+    response = await client.execute(process.env.NFT_ADDR, swapMsg);
     response.data = JSON.parse(new TextDecoder().decode(response.data));
     console.log(response);
 }

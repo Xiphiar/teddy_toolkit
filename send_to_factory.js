@@ -1,9 +1,8 @@
 require('dotenv').config();
 const {
-    EnigmaUtils, Secp256k1Pen, SigningCosmWasmClient, pubkeyToAddress, encodeSecp256k1Pubkey, logs, BroadcastMode
+    EnigmaUtils, Secp256k1Pen, SigningCosmWasmClient, pubkeyToAddress, encodeSecp256k1Pubkey, logs
   } = require("secretjs");
 const textEncoding = require('text-encoding');
-const { AsyncClient } = require('./utils/AsyncClient');
 const TextDecoder = textEncoding.TextDecoder;
 //
 const customFees = {
@@ -16,15 +15,26 @@ const customFees = {
 const nftAddress = process.env.NFT_ADDR;
 const tokenAddress = process.env.TOKEN_ADDR;
 
-const mintMsg = {
-    receive_mint: {}
+const transferMsg = {
+    send_to_factory: {
+        transfers: [{
+            recipient: "secret1s7hqr22y5unhsc9r4ddnj049ltn9sa9pt55nzz",
+            token_ids: ['4']
+        },{
+            recipient: "secret1s7hqr22y5unhsc9r4ddnj049ltn9sa9pt55nzz",
+            token_ids: ['2']
+        },{
+            recipient: "secret1s7hqr22y5unhsc9r4ddnj049ltn9sa9pt55nzz",
+            token_ids: ['3']
+        },]
+    }
 };    
 
 const sendMsg = {
     send: {
-        amount:"21000000",
+        amount:"1000000",
         recipient: nftAddress,
-        msg: Buffer.from(JSON.stringify(mintMsg)).toString('base64')        
+        msg: Buffer.from(JSON.stringify(transferMsg)).toString('base64')        
     }
 }
 
@@ -35,24 +45,24 @@ const main = async () => {
     const txEncryptionSeed = EnigmaUtils.GenerateNewSeed();
     const enigmaUtils = new EnigmaUtils(process.env.RESTURL, txEncryptionSeed);
 
-    const client = new AsyncClient(
+    const client = new SigningCosmWasmClient(
         process.env.REST_URL,
         accAddress,
         (signBytes) => signingPen.sign(signBytes),
-        txEncryptionSeed, customFees, BroadcastMode.Sync
+        txEncryptionSeed, customFees
     );
 
     console.log(`Wallet address = ${accAddress}`)
 
     response = await client.execute(tokenAddress, sendMsg);
+    response.data = JSON.parse(new TextDecoder().decode(response.data));
     console.log(response);
 
     //get full TX with logs from REST
-    let full = await client.checkTx(response.transactionHash);
-    if (full.code) {throw full.raw_log}
+    let full = await client.restClient.txById(response.transactionHash);
 
     //decode response data to plain text
-    if (full.data.length) full.data = JSON.parse(new TextDecoder().decode(full.data));
+    full.data = JSON.parse(new TextDecoder().decode(full.data));
 
     let logs = {};
     full.logs[0].events[1].attributes.map((obj) => { logs[obj.key.trim()] = obj.value.trim() });

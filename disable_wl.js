@@ -4,10 +4,8 @@ const {
   EnigmaUtils, Secp256k1Pen, SigningCosmWasmClient, pubkeyToAddress, encodeSecp256k1Pubkey
 } = require("secretjs");
 
-const lockMsg = {
-  set_contract_status: {
-    level: "stop_all"
-  }
+const deactivateMsg = {
+  deactivate_whitelist : { }
 }
 
 const main = async () => {
@@ -27,8 +25,8 @@ const main = async () => {
 
   console.log(`Wallet address = ${accAddress}`)
 
-  response = await client.execute(process.env.NFT_ADDR, lockMsg);
-  response.data = JSON.parse(new TextDecoder().decode(response.data));
+  response = await client.execute(process.env.NFT_ADDR, deactivateMsg);
+  if (response.data.length) response.data = JSON.parse(new TextDecoder().decode(response.data));
   console.log(response);
 }
 

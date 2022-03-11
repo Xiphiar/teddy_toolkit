@@ -12,10 +12,38 @@ const customFees = {
     }
 }
 
-const sendMsg = {
-    send: {
-        amount:"1000000000",
-        recipient: "secret1p6xc2hgrr6nt50zgx9n49yeacdtesn84xtwcpm",
+const swapMsg = {
+    mint_mutant: {
+        //token_id:"10001",
+        public_metadata: {
+            extension: {
+                attributes: [{
+                    trait_type: "Base Design",
+                    value: "Zom-Bear"
+                }],
+                image: "https://arweave.net/0ZP_yaIeYc4vGwMxqoJdqgOGKjZpspl7ktGUmUvNee4",
+            }
+        },
+        private_metadata: {
+            extension: {
+                attributes: [{
+                    trait_type: "Base Design",
+                    value: "Zom-Bear"
+                }],
+                media: [{
+                    authentication: {key: "538f94f8a3692083317250229e2d9d5c"},
+                    extension: 'png',
+                    file_type: 'image',
+                    url: 'https://arweave.net/1F0HVHbBO6BtxFGM_Ie-KMpF6xPCrCJRfKdcuizRyDA',
+                }]
+            }
+        },
+    }
+}  
+
+const costMsg = {
+    fac_cost: {
+        fac_cost: "1"
     }
 }  
 
@@ -35,8 +63,8 @@ const main = async () => {
 
     console.log(`Wallet address = ${accAddress}`)
 
-    response = await client.execute(process.env.TOKEN_ADDR, sendMsg);
-    response.data = JSON.parse(new TextDecoder().decode(response.data));
+    response = await client.execute(process.env.NFT_ADDR, costMsg);
+    //response.data = JSON.parse(new TextDecoder().decode(response.data));
     console.log(response);
 }
 

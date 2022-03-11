@@ -4,15 +4,22 @@ const {
   EnigmaUtils, Secp256k1Pen, SigningCosmWasmClient, pubkeyToAddress, encodeSecp256k1Pubkey
 } = require("secretjs");
 
-const lockMsg = {
-  set_contract_status: {
-    level: "stop_all"
+const setMsg = {
+  change_dao : {
+    dao_addr: process.env.RECIP_ADDR
+    //dao_addr: "secret1zc5l6mvfrvskv23vu7hefl9tsfjmmdtuy7rmln"
+  }
+}
+
+const adminMsg = {
+  change_admin : {
+    admin_addr: process.env.RECIP_ADDR
+    //admin_addr: "secret1zc5l6mvfrvskv23vu7hefl9tsfjmmdtuy7rmln"
   }
 }
 
 const main = async () => {
-  console.log(process.env.MNEMONIC);
-  const signingPen = await Secp256k1Pen.fromMnemonic(process.env.MNEMONIC);
+  const signingPen = await Secp256k1Pen.fromMnemonic(process.env.RECIP_MNEMONIC);
   const pubkey = encodeSecp256k1Pubkey(signingPen.pubkey);
   const accAddress = pubkeyToAddress(pubkey, 'secret');
   const txEncryptionSeed = EnigmaUtils.GenerateNewSeed();
@@ -27,8 +34,8 @@ const main = async () => {
 
   console.log(`Wallet address = ${accAddress}`)
 
-  response = await client.execute(process.env.NFT_ADDR, lockMsg);
-  response.data = JSON.parse(new TextDecoder().decode(response.data));
+  response = await client.execute(process.env.DAO_ADDR, setMsg);
+  //response.data = JSON.parse(new TextDecoder().decode(response.data));
   console.log(response);
 }
 
